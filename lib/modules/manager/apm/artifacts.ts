@@ -60,10 +60,16 @@ export async function updateArtifacts({
     // it owns, so without it `apm install` skips the committed files as
     // unmanaged: the ownership ledger and file hashes are lost, and when a ref
     // moves, the deployed files stay at the old version.
-    await exec(
-      isLockFileMaintenance ? 'apm install --update' : 'apm install',
-      execOptions,
-    );
+    const installCmd = isLockFileMaintenance
+      ? 'apm install --update'
+      : 'apm install';
+    const cmds = [installCmd];
+    // `apm install` leaves the root context files (`AGENTS.md`, `CLAUDE.md`, ...)
+    // to an explicit `apm compile`, so run it when the repository opts in.
+    if (config.postUpdateOptions?.includes('apmCompile')) {
+      cmds.push('apm compile');
+    }
+    await exec(cmds, execOptions);
 
     // The command regenerates the lockfile and re-deploys the harness
     // directories (`.github/`, `.claude/`, ...) that APM consumers commit, so

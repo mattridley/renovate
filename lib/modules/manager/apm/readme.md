@@ -32,3 +32,6 @@ This requires the `apm` CLI to be available (for example, with `binarySource=glo
 
 With `lockFileMaintenance` enabled, Renovate runs `apm install --update` instead, which re-resolves each dependency to the latest ref `apm.yml` allows without editing `apm.yml`.
 Renovate keeps `apm.lock.yaml` in place for both commands: it is APM's record of which deployed files it owns, and without it APM skips the committed files instead of updating them.
+
+By default `apm install` does not compile the root context files (such as `AGENTS.md` or `CLAUDE.md`).
+Add `apmCompile` to [`postUpdateOptions`](../../../configuration-options.md#postupdateoptions) to run `apm compile` after `apm install`, and Renovate commits the files it changes.

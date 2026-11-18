@@ -4323,6 +4323,12 @@ This way Renovate can use GitHub's [Commit signing support for bots and other Gi
 
 ## `postUpdateOptions`
 
+### `apmCompile`
+
+Run `apm compile` after `apm install` (for `apm` dependency updates and lock file maintenance).
+`apm install` only deploys primitives, so targets that read a compiled root context file (like `AGENTS.md` or `CLAUDE.md`) need this step to stay in sync with the updated dependencies.
+Renovate commits any files that `apm compile` changes, together with the other artifact changes.
+
 ### `bundlerConservative`
 
 Enable conservative mode for `bundler` (Ruby dependencies).

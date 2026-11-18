@@ -121,6 +121,63 @@ describe('modules/manager/apm/artifacts', () => {
       expect(execSnapshots).toMatchObject([{ cmd: 'apm install' }]);
     });
 
+    it.each`
+      desc                                      | isLockFileMaintenance | postUpdateOptions | cmds
+      ${'compiles after install'}               | ${false}              | ${['apmCompile']} | ${['apm install', 'apm compile']}
+      ${'compiles after lock file maintenance'} | ${true}               | ${['apmCompile']} | ${['apm install --update', 'apm compile']}
+      ${'does not compile by default'}          | ${false}              | ${undefined}      | ${['apm install']}
+    `(
+      '$desc',
+      async ({ isLockFileMaintenance, postUpdateOptions, cmds }) => {
+        const execSnapshots = mockExecAll();
+        fs.getSiblingFileName.mockReturnValueOnce('apm.lock.yaml');
+        fs.readLocalFile.mockResolvedValueOnce('Old apm.lock.yaml');
+        git.getRepoStatus.mockResolvedValueOnce(
+          repoStatus({ modified: ['apm.lock.yaml', 'AGENTS.md'] }),
+        );
+        fs.readLocalFile.mockResolvedValueOnce('New apm.lock.yaml');
+        fs.readLocalFile.mockResolvedValueOnce('# agents');
+        await expect(
+          updateArtifacts({
+            packageFileName: 'apm.yml',
+            updatedDeps: [{ depName: 'owner/repo' }],
+            newPackageFileContent: 'new',
+            config: { ...config, isLockFileMaintenance, postUpdateOptions },
+          }),
+        ).resolves.toEqual([
+          {
+            file: {
+              type: 'addition',
+              path: 'apm.lock.yaml',
+              contents: 'New apm.lock.yaml',
+            },
+          },
+          {
+            file: { type: 'addition', path: 'AGENTS.md', contents: '# agents' },
+          },
+        ]);
+        expect(execSnapshots).toMatchObject(
+          cmds.map((cmd: string) => ({ cmd })),
+        );
+      },
+    );
+
+    it('returns an artifact error if apm compile fails', async () => {
+      mockExecAll(new Error('compile failed'));
+      fs.getSiblingFileName.mockReturnValueOnce('apm.lock.yaml');
+      fs.readLocalFile.mockResolvedValueOnce('Old apm.lock.yaml');
+      await expect(
+        updateArtifacts({
+          packageFileName: 'apm.yml',
+          updatedDeps: [{ depName: 'owner/repo' }],
+          newPackageFileContent: 'new',
+          config: { ...config, postUpdateOptions: ['apmCompile'] },
+        }),
+      ).resolves.toMatchObject([
+        { artifactError: { fileName: 'apm.lock.yaml' } },
+      ]);
+    });
+
     it('returns regenerated harness files alongside the lockfile', async () => {
       const execSnapshots = mockExecAll();
       fs.getSiblingFileName.mockReturnValueOnce('apm.lock.yaml');

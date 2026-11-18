@@ -3207,6 +3207,7 @@ const options: Readonly<RenovateOptions>[] = [
     default: [],
     subType: 'string',
     allowedValues: [
+      'apmCompile',
       'bundlerConservative',
       'composerWithAll',
       'composerNoMinimalChanges',
