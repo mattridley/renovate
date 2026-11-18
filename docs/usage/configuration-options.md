@@ -154,6 +154,19 @@ For example, when adding focused reviewers for a specific package group.
 
 Please note that Reviewers are only added during creation of a PR, but are not modified afterwards.
 
+## `apmTrustTransitiveMcp`
+
+Set to `true` to run `apm install` with the `--trust-transitive-mcp` flag.
+This trusts MCP servers shipped by transitive packages without you re-declaring them in `apm.yml`.
+
+```json
+{
+  "apmTrustTransitiveMcp": true
+}
+```
+
+Renovate does not run any of those MCP servers, but the resulting MCP configuration is written to your repository and included in the update PR, so review it as you would any other dependency change.
+
 ## `assignAutomerge`
 
 By default, Renovate will not assign reviewers and assignees to an automerge-enabled PR unless it fails status checks.

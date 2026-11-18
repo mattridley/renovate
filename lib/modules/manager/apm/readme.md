@@ -32,3 +32,5 @@ This requires the `apm` CLI to be available (for example, with `binarySource=glo
 
 With `lockFileMaintenance` enabled, Renovate runs `apm install --update` instead, which re-resolves each dependency to the latest ref `apm.yml` allows without editing `apm.yml`.
 Renovate keeps `apm.lock.yaml` in place for both commands: it is APM's record of which deployed files it owns, and without it APM skips the committed files instead of updating them.
+
+Set [`apmTrustTransitiveMcp`](../../../configuration-options.md#apmtrusttransitivemcp) to `true` to pass `--trust-transitive-mcp` to `apm install`, so MCP servers shipped by transitive packages are trusted.

@@ -82,6 +82,7 @@ export interface ToolConstraintsConfig {
 
 export interface UpdateArtifactsConfig extends ToolConstraintsConfig {
   isLockFileMaintenance?: boolean;
+  apmTrustTransitiveMcp?: boolean;
   composerIgnorePlatformReqs?: string[];
   goGetDirs?: string[];
   currentValue?: string;

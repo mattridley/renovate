@@ -842,6 +842,15 @@ const options: Readonly<RenovateOptions>[] = [
     default: '12021',
   },
   {
+    name: 'apmTrustTransitiveMcp',
+    scopes: sharedScopes,
+    description:
+      'Run `apm install` with the `--trust-transitive-mcp` flag, which trusts MCP servers shipped by transitive packages.',
+    type: 'boolean',
+    default: false,
+    supportedManagers: ['apm'],
+  },
+  {
     name: 'composerIgnorePlatformReqs',
     scopes: sharedScopes,
     description:

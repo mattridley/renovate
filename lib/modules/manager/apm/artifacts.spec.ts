@@ -121,6 +121,41 @@ describe('modules/manager/apm/artifacts', () => {
       expect(execSnapshots).toMatchObject([{ cmd: 'apm install' }]);
     });
 
+    it.each`
+      desc                                      | isLockFileMaintenance | apmTrustTransitiveMcp | cmd
+      ${'trusts transitive MCP servers'}        | ${false}              | ${true}               | ${'apm install --trust-transitive-mcp'}
+      ${'trusts them on lock file maintenance'} | ${true}               | ${true}               | ${'apm install --update --trust-transitive-mcp'}
+      ${'does not trust them by default'}       | ${false}              | ${undefined}          | ${'apm install'}
+    `(
+      '$desc',
+      async ({ isLockFileMaintenance, apmTrustTransitiveMcp, cmd }) => {
+        const execSnapshots = mockExecAll();
+        fs.getSiblingFileName.mockReturnValueOnce('apm.lock.yaml');
+        fs.readLocalFile.mockResolvedValueOnce('Old apm.lock.yaml');
+        git.getRepoStatus.mockResolvedValueOnce(
+          repoStatus({ modified: ['apm.lock.yaml'] }),
+        );
+        fs.readLocalFile.mockResolvedValueOnce('New apm.lock.yaml');
+        await expect(
+          updateArtifacts({
+            packageFileName: 'apm.yml',
+            updatedDeps: [{ depName: 'owner/repo' }],
+            newPackageFileContent: 'new',
+            config: { ...config, isLockFileMaintenance, apmTrustTransitiveMcp },
+          }),
+        ).resolves.toEqual([
+          {
+            file: {
+              type: 'addition',
+              path: 'apm.lock.yaml',
+              contents: 'New apm.lock.yaml',
+            },
+          },
+        ]);
+        expect(execSnapshots).toMatchObject([{ cmd }]);
+      },
+    );
+
     it('returns regenerated harness files alongside the lockfile', async () => {
       const execSnapshots = mockExecAll();
       fs.getSiblingFileName.mockReturnValueOnce('apm.lock.yaml');

@@ -1,4 +1,4 @@
-import { isNonEmptyArray } from '@sindresorhus/is';
+import { isNonEmptyArray, isString } from '@sindresorhus/is';
 import { TEMPORARY_ERROR } from '../../../constants/error-messages.ts';
 import { logger } from '../../../logger/index.ts';
 import { exec } from '../../../util/exec/index.ts';
@@ -60,10 +60,14 @@ export async function updateArtifacts({
     // it owns, so without it `apm install` skips the committed files as
     // unmanaged: the ownership ledger and file hashes are lost, and when a ref
     // moves, the deployed files stay at the old version.
-    await exec(
-      isLockFileMaintenance ? 'apm install --update' : 'apm install',
-      execOptions,
-    );
+    const installCmd = [
+      'apm install',
+      isLockFileMaintenance ? '--update' : null,
+      config.apmTrustTransitiveMcp ? '--trust-transitive-mcp' : null,
+    ]
+      .filter(isString)
+      .join(' ');
+    await exec(installCmd, execOptions);
 
     // The command regenerates the lockfile and re-deploys the harness
     // directories (`.github/`, `.claude/`, ...) that APM consumers commit, so
